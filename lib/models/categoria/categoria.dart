@@ -1,38 +1,36 @@
 class Categoria {
   int? id;
   String nome;
-  String? descricao;
-  String tipo; // 'RECEITA' ou 'DESPESA'
+  String tipo; // 'receita' or 'despesa'
+  int usuarioId;
 
   Categoria({
     this.id,
     required this.nome,
-    this.descricao,
     required this.tipo,
+    required this.usuarioId,
   });
 
-  // Converte Categoria
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'nome': nome,
-      'descricao': descricao,
       'tipo': tipo,
+      'usuarioId': usuarioId,
     };
   }
 
-  // Cria Categoria
   factory Categoria.fromMap(Map<String, dynamic> map) {
     return Categoria(
       id: map['id'],
       nome: map['nome'],
-      descricao: map['descricao'],
       tipo: map['tipo'],
+      usuarioId: map['usuarioId'],
     );
   }
 
   @override
   String toString() {
-    return 'Categoria{id: $id, nome: $nome, tipo: $tipo}';
+    return 'Categoria{id: $id, nome: $nome, tipo: $tipo, usuarioId: $usuarioId}';
   }
 }

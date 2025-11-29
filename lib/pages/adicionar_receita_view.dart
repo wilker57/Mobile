@@ -27,7 +27,6 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
   void initState() {
     super.initState();
     _loadCategorias();
-    // If editing, populate fields
     if (widget.receita != null) {
       final r = widget.receita!;
       _descricaoController.text = r.descricao;
@@ -38,12 +37,24 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
   }
 
   Future<void> _loadCategorias() async {
-    final categoriaVM = Provider.of<CategoriaViewModel>(context, listen: false);
-    final categorias = await categoriaVM.getCategoriasPorTipo('RECEITA');
+    final categoriaVM = context.read<CategoriaViewModel>();
+    // Garantir que as categorias estejam carregadas
+    if (categoriaVM.categorias.isEmpty) {
+      await categoriaVM.carregarCategorias();
+    }
+    final todasCategorias = categoriaVM.categorias;
     setState(() {
-      _categorias = categorias;
-      if (_categorias.isNotEmpty) _categoriaId = _categorias.first.id;
+      _categorias = todasCategorias.where((c) => c.tipo == 'RECEITA').toList();
+      if (widget.receita == null && _categorias.isNotEmpty) {
+        _categoriaId = _categorias.first.id;
+      }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadCategorias();
   }
 
   @override
@@ -58,10 +69,12 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
 
     final usuarioVM = Provider.of<UsuarioViewModel>(context, listen: false);
     final receitaVM = Provider.of<ReceitaViewModel>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
 
     if (usuarioVM.usuarioAtual == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuário não autenticado')),
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Usuario nao autenticado')),
       );
       return;
     }
@@ -71,7 +84,6 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     final valorStr = _valorController.text.replaceAll(',', '.');
     final valor = double.tryParse(valorStr) ?? 0.0;
 
-    // If editing, update existing; otherwise create new
     if (widget.receita != null) {
       final atual = widget.receita!;
       atual.descricao = _descricaoController.text.trim();
@@ -83,9 +95,12 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
 
       setState(() => _isLoading = false);
       if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receita atualizada')),
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Receita atualizada com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
       );
       return;
     }
@@ -101,22 +116,13 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     await receitaVM.adicionarReceita(receita);
 
     setState(() => _isLoading = false);
-
     if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Receita adicionada')),
-    );
-  }
-
-  Future<void> _delete() async {
-    if (widget.receita == null) return;
-    final receitaVM = Provider.of<ReceitaViewModel>(context, listen: false);
-    await receitaVM.removerReceita(widget.receita!.id!);
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Receita removida')),
+    navigator.pop();
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Receita adicionada com sucesso!'),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -139,39 +145,58 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
         actions: [
           if (widget.receita != null)
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () async {
+                final receitaVM = context.read<ReceitaViewModel>();
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+
                 final ok = await showDialog<bool>(
                   context: context,
-                  builder: (c) => AlertDialog(
-                    title: const Text('Confirmar exclusão'),
-                    content: const Text('Deseja remover esta receita?'),
+                  builder: (context) => AlertDialog(
+                    title: const Text('Confirmar Exclusaoo'),
+                    content: Text(
+                        'Deseja realmente excluir a receita "${widget.receita!.descricao}"?'),
                     actions: [
                       TextButton(
-                          onPressed: () => Navigator.pop(c, false),
-                          child: const Text('Cancelar')),
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancelar'),
+                      ),
                       TextButton(
-                          onPressed: () => Navigator.pop(c, true),
-                          child: const Text('Remover')),
+                        style:
+                            TextButton.styleFrom(foregroundColor: Colors.red),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Excluir'),
+                      ),
                     ],
                   ),
                 );
-                if (ok == true) await _delete();
+                if (ok == true) {
+                  await receitaVM.deleteReceita(widget.receita!.id!);
+                  if (!mounted) return;
+                  navigator.pop();
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Receita excluida com sucesso!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
               },
             ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: [
               TextFormField(
                 controller: _descricaoController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
+                decoration: const InputDecoration(labelText: 'Descricao'),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Informe a descrição' : null,
+                    (v == null || v.isEmpty) ? 'Informe a descricao' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -183,7 +208,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Informe o valor';
                   final parsed = double.tryParse(v.replaceAll(',', '.'));
-                  if (parsed == null) return 'Valor inválido';
+                  if (parsed == null) return 'Valor invalido';
                   return null;
                 },
               ),
@@ -198,7 +223,10 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int?>(
-                value: _categoriaId,
+                key: ValueKey(_categoriaId),
+                initialValue: _categorias.any((c) => c.id == _categoriaId)
+                    ? _categoriaId
+                    : null,
                 items: _categorias.map((c) {
                   return DropdownMenuItem<int?>(
                     value: c.id,
@@ -209,14 +237,33 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
                 decoration: const InputDecoration(labelText: 'Categoria'),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Salvar'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _isLoading ? null : () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _isLoading ? null : _submit,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Salvar'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

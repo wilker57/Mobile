@@ -6,13 +6,13 @@ class CategoriaDao {
 
   Future<int> create(Categoria categoria) async {
     final db = await dbHelper.database;
-    return await db.insert('categorias', categoria.toMap());
+    return await db.insert('Categoria', categoria.toMap());
   }
 
   Future<Categoria?> read(int id) async {
     final db = await dbHelper.database;
     final maps = await db.query(
-      'categorias',
+      'Categoria',
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -25,16 +25,19 @@ class CategoriaDao {
 
   Future<List<Categoria>> readAll() async {
     final db = await dbHelper.database;
-    final result = await db.query('categorias', orderBy: 'nome ASC');
+    final result = await db.query(
+      'Categoria',
+      orderBy: 'nome ASC',
+    );
     return result.map((map) => Categoria.fromMap(map)).toList();
   }
 
-  Future<List<Categoria>> readByTipo(String tipo) async {
+  Future<List<Categoria>> readAllByUsuario(int usuarioId) async {
     final db = await dbHelper.database;
     final result = await db.query(
-      'categorias',
-      where: 'tipo = ?',
-      whereArgs: [tipo],
+      'Categoria',
+      where: 'usuarioId = ?',
+      whereArgs: [usuarioId],
       orderBy: 'nome ASC',
     );
     return result.map((map) => Categoria.fromMap(map)).toList();
@@ -43,7 +46,7 @@ class CategoriaDao {
   Future<int> update(Categoria categoria) async {
     final db = await dbHelper.database;
     return await db.update(
-      'categorias',
+      'Categoria',
       categoria.toMap(),
       where: 'id = ?',
       whereArgs: [categoria.id],
@@ -53,7 +56,7 @@ class CategoriaDao {
   Future<int> delete(int id) async {
     final db = await dbHelper.database;
     return await db.delete(
-      'categorias',
+      'Categoria',
       where: 'id = ?',
       whereArgs: [id],
     );

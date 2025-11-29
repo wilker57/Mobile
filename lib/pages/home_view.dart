@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import '../mvvm/usuario_viewmodel.dart';
-import '../mvvm/receita_viewmodel.dart';
-import '../mvvm/despesa_viewmodel.dart';
-import '../mvvm/saldo_viewmodel.dart';
+
 import '../mvvm/categoria_viewmodel.dart';
-import 'adicionar_receita_view.dart';
+import '../mvvm/despesa_viewmodel.dart';
+import '../mvvm/receita_viewmodel.dart';
+import '../mvvm/saldo_viewmodel.dart';
+import '../mvvm/usuario_viewmodel.dart';
 import 'adicionar_despesa_view.dart';
+import 'adicionar_receita_view.dart';
+import 'categoria_view.dart';
+import 'despesa_list_view.dart';
 import 'login_view.dart';
-import 'package:intl/intl.dart';
+import 'receita_list_view.dart';
+import 'relatorios_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -20,11 +24,14 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   bool _isLoading = true;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _carregarDados();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarDados();
+    });
   }
 
   Future<void> _carregarDados() async {
@@ -38,7 +45,7 @@ class _HomeViewState extends State<HomeView> {
 
       receitaVM.setUsuario(usuarioId);
       despesaVM.setUsuario(usuarioId);
-
+      categoriaVM.setUsuario(usuarioId);
       await Future.wait([
         receitaVM.carregarReceitas(),
         despesaVM.carregarDespesas(),
@@ -69,115 +76,158 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Olá, ${usuario?.nome ?? "Usuário"} ',
+          'Ola, ${usuario?.nome ?? "Usuario"} ',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.white),
             tooltip: 'Sair',
             onPressed: _logout,
           ),
         ],
       ),
+      drawer: _buildDrawer(usuario),
       body: RefreshIndicator(
         onRefresh: _carregarDados,
         child: const _DashboardContent(),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _mostrarOpcoesAdicionar,
-        backgroundColor: const Color.fromARGB(212, 5, 166, 13),
-        icon: const Icon(Icons.add),
-        label: const Text('Adicionar'),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        showUnselectedLabels: true,
+        onTap: (index) async {
+          setState(() => _selectedIndex = index);
+          if (index == 1) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ReceitaListView()),
+            );
+          } else if (index == 2) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DespesaListView()),
+            );
+          } else if (index == 3) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CategoriaView()),
+            );
+          } else if (index == 4) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RelatoriosView()),
+            );
+          }
+          if (mounted) setState(() => _selectedIndex = 0);
+        },
+        items: [
+          _navItem(
+              icon: Icons.home_outlined, label: 'Home', color: Colors.blue),
+          _navItem(
+              icon: Icons.arrow_upward, label: 'Receita', color: Colors.green),
+          _navItem(
+              icon: Icons.arrow_downward, label: 'Despesa', color: Colors.red),
+          _navItem(
+              icon: Icons.category, label: 'Categoria', color: Colors.indigo),
+          _navItem(
+              icon: Icons.bar_chart, label: 'Relatorios', color: Colors.orange),
+        ],
       ),
     );
   }
 
-  void _mostrarOpcoesAdicionar() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Adicionar novo registro',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Escolha o que deseja adicionar:',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
+  BottomNavigationBarItem _navItem(
+      {required IconData icon, required String label, required Color color}) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon, color: color.withAlpha(128)),
+      activeIcon: Icon(icon, color: color),
+      label: label,
+    );
+  }
 
-              // 🔹 Opção: Receita
-              ElevatedButton.icon(
-                icon:
-                    const Icon(Icons.arrow_upward_rounded, color: Colors.white),
-                label: const Text(
-                  'Adicionar Receita',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const AdicionarReceitaView()),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // 🔹 Opção: Despesa
-              ElevatedButton.icon(
-                icon: const Icon(Icons.arrow_downward_rounded,
-                    color: Colors.white),
-                label: const Text(
-                  'Adicionar Despesa',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const AdicionarDespesaView()),
-                  );
-                },
-              ),
-            ],
-          ),
-
-          // 🔹 Botão de cancelar
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+  Drawer _buildDrawer(dynamic usuario) {
+    return Drawer(
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: Text(usuario?.nome ?? 'Usuario'),
+            accountEmail: Text(usuario?.email ?? ''),
+            currentAccountPicture: const CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: Colors.blue),
             ),
-          ],
-        );
-      },
+          ),
+          ListTile(
+            leading: const Icon(Icons.arrow_upward),
+            title: const Text('Receita'),
+            onTap: () async {
+              Navigator.pop(context);
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReceitaListView()),
+              );
+              _carregarDados();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.arrow_downward),
+            title: const Text('Despesa'),
+            onTap: () async {
+              Navigator.pop(context);
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DespesaListView()),
+              );
+              _carregarDados();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.category),
+            title: const Text('Categoria'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CategoriaView()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.bar_chart),
+            title: const Text('Relatorios'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RelatoriosView()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Configuracoes'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content:
+                        Text('Tela de configuracoes ainda nao disponivel')),
+              );
+            },
+          ),
+          const Spacer(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Sair', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(context);
+              _logout();
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -190,6 +240,7 @@ class _DashboardContent extends StatelessWidget {
     final receitaVM = context.watch<ReceitaViewModel>();
     final despesaVM = context.watch<DespesaViewModel>();
     final saldoVM = context.watch<SaldoViewModel>();
+    final categoriaVM = context.watch<CategoriaViewModel>();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -197,27 +248,14 @@ class _DashboardContent extends StatelessWidget {
         _SaldoCard(
             receitaVM: receitaVM, despesaVM: despesaVM, saldoVM: saldoVM),
         const SizedBox(height: 16),
-        _ResumoCard(receitaVM: receitaVM, despesaVM: despesaVM),
+        _AcessosRapidosCard(),
         const SizedBox(height: 16),
-        _ListaTransacoes(
-          titulo: 'Receitas Recentes',
-          corPrincipal: Colors.green,
-          itens: receitaVM.receitas,
-          tipo: 'receita',
-        ),
-        const SizedBox(height: 16),
-        _ListaTransacoes(
-          titulo: 'Despesas Recentes',
-          corPrincipal: Colors.red,
-          itens: despesaVM.despesas,
-          tipo: 'despesa',
-        ),
+        _GastosPorCategoriaCard(despesaVM: despesaVM, categoriaVM: categoriaVM),
       ],
     );
   }
 }
 
-// 🔹 SALDO CARD
 class _SaldoCard extends StatelessWidget {
   final ReceitaViewModel receitaVM;
   final DespesaViewModel despesaVM;
@@ -240,326 +278,260 @@ class _SaldoCard extends StatelessWidget {
         final despesas = snapshot.data?[1] ?? 0.0;
         final saldo = saldoVM.calcularSaldoAtual(receitas, despesas);
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: saldo >= 0 ? Colors.green.shade50 : Colors.red.shade50,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const Text(
-                'Saldo Atual',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                formatter.format(saldo),
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color:
-                      saldo >= 0 ? Colors.green.shade700 : Colors.red.shade700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                saldo >= 0
-                    ? 'Você está no positivo 🎉'
-                    : 'Cuidado! Gastos altos ⚠️',
-                style: TextStyle(
-                  color:
-                      saldo >= 0 ? Colors.green.shade600 : Colors.red.shade600,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-// 🔹 RESUMO CARD
-class _ResumoCard extends StatelessWidget {
-  final ReceitaViewModel receitaVM;
-  final DespesaViewModel despesaVM;
-
-  const _ResumoCard({required this.receitaVM, required this.despesaVM});
-
-  @override
-  Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
-    return FutureBuilder<List<double>>(
-      future: Future.wait([receitaVM.totalReceitas, despesaVM.totalDespesas]),
-      builder: (context, snapshot) {
-        final receitas = snapshot.data?[0] ?? 0.0;
-        final despesas = snapshot.data?[1] ?? 0.0;
-
         return Card(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 2,
+          elevation: 3,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            padding: const EdgeInsets.all(20),
             child: Row(
-              children: [
-                Expanded(
-                  child: _ResumoCardItem(
-                    icon: Icons.arrow_upward,
-                    label: 'Receitas',
-                    valor: formatter.format(receitas),
-                    color: Colors.green,
-                  ),
-                ),
-                Container(width: 1, height: 70, color: Colors.grey.shade300),
-                Expanded(
-                  child: _ResumoCardItem(
-                    icon: Icons.arrow_downward,
-                    label: 'Despesas',
-                    valor: formatter.format(despesas),
-                    color: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ResumoCardItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String valor;
-  final Color color;
-
-  const _ResumoCardItem({
-    required this.icon,
-    required this.label,
-    required this.valor,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 32),
-        const SizedBox(height: 6),
-        Text(label,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 6),
-        Text(valor,
-            style: TextStyle(
-                color: color, fontSize: 26, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-}
-
-// 🔹 LISTA DE TRANSAÇÕES
-class _ListaTransacoes extends StatelessWidget {
-  final String titulo;
-  final Color corPrincipal;
-  final List<dynamic> itens;
-  final String tipo;
-
-  const _ListaTransacoes({
-    required this.titulo,
-    required this.corPrincipal,
-    required this.itens,
-    required this.tipo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    final dateFormatter = DateFormat('dd/MM/yyyy');
-
-    if (itens.isEmpty) {
-      return _EmptyState(mensagem: 'Nenhuma $tipo cadastrada');
-    }
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(
-                    tipo == 'receita'
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
-                    color: corPrincipal),
-                const SizedBox(width: 8),
-                Text(
-                  '${receitaVM.receitas.length} itens',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            receitaVM.receitas.isEmpty
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'Nenhuma receita cadastrada',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  )
-                : Column(
-                    children: receitaVM.receitas.take(5).map((receita) {
-                      final formatter =
-                          NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-                      final dateFormatter = DateFormat('dd/MM/yyyy');
-
-                      return ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: Colors.green,
-                          child: Icon(Icons.arrow_upward, color: Colors.white),
-                        ),
-                        title: Text(receita.descricao),
-                        subtitle: Text(dateFormatter.format(receita.data)),
-                        trailing: Text(
-                          formatter.format(receita.valor),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 🔹 EMPTY STATE PADRÃO
-class _EmptyState extends StatelessWidget {
-  final String mensagem;
-
-  const _EmptyState({required this.mensagem});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Despesas Recentes',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Saldo atual',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Text(
+                      formatter.format(saldo),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: saldo >= 0 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${despesaVM.despesas.length} itens',
-                  style: TextStyle(color: Colors.grey.shade600),
+                Icon(
+                  saldo >= 0 ? Icons.trending_up : Icons.trending_down,
+                  color: saldo >= 0 ? Colors.green : Colors.red,
+                  size: 42,
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AcessosRapidosCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Acessos rapidos',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickButton(
+                    label: 'Receita',
+                    icon: Icons.arrow_upward,
+                    color: Colors.green,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const AdicionarReceitaView()),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickButton(
+                    label: 'Despesa',
+                    icon: Icons.arrow_downward,
+                    color: Colors.red,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const AdicionarDespesaView()),
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            despesaVM.despesas.isEmpty
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'Nenhuma despesa cadastrada',
-                        style: TextStyle(color: Colors.grey),
-                      ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickButton(
+                    label: 'Relatorios',
+                    icon: Icons.bar_chart,
+                    color: Colors.blue,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RelatoriosView()),
                     ),
-                  )
-                : Column(
-                    children: despesaVM.despesas.take(5).map((despesa) {
-                      final formatter =
-                          NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-                      final dateFormatter = DateFormat('dd/MM/yyyy');
-
-                      return ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: Colors.red,
-                          child:
-                              Icon(Icons.arrow_downward, color: Colors.white),
-                        ),
-                        title: Text(despesa.descricao),
-                        subtitle: Text(dateFormatter.format(despesa.data)),
-                        trailing: Text(
-                          formatter.format(despesa.valor),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                      );
-                    }).toList(),
                   ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickButton(
+                    label: 'Categoria',
+                    icon: Icons.category,
+                    color: Colors.orange,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CategoriaView()),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickButton(
+      {required this.label,
+      required this.icon,
+      required this.color,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 64) / 2,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, color: color),
+        label: Text(label, style: TextStyle(color: color)),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: color.withAlpha(153)),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+}
+
+class _GastosPorCategoriaCard extends StatelessWidget {
+  final DespesaViewModel despesaVM;
+  final CategoriaViewModel categoriaVM;
+
+  const _GastosPorCategoriaCard(
+      {required this.despesaVM, required this.categoriaVM});
+
+  @override
+  Widget build(BuildContext context) {
+    final totalDespesas =
+        despesaVM.despesas.fold<double>(0.0, (sum, d) => sum + d.valor);
+    final categoriaMap = {for (var c in categoriaVM.categorias) c.id: c};
+    final Map<int?, double> somaPorCat = {};
+    for (final d in despesaVM.despesas) {
+      somaPorCat[d.categoriaId] = (somaPorCat[d.categoriaId] ?? 0) + d.valor;
+    }
+
+    final items = somaPorCat.entries.toList();
+    items.sort((a, b) => (b.value).compareTo(a.value));
+    final colorList = List<MaterialColor>.from(Colors.primaries);
+    colorList.shuffle();
+    final palette = colorList.map((c) => c.shade400).toList();
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Gastos por categoria',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            if (items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: Text('Nenhuma despesa cadastrada',
+                    style: TextStyle(color: Colors.grey)),
+              )
+            else
+              ...items.asMap().entries.map((entry) {
+                final e = entry.value;
+                final color = palette[entry.key % palette.length];
+                final percent =
+                    totalDespesas == 0 ? 0 : (e.value / totalDespesas) * 100;
+                final cat = categoriaMap[e.key];
+                final icon = _iconForCategory(cat?.nome ?? 'Outros');
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: color.withAlpha(30),
+                        child: Icon(icon, color: color),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(cat?.nome ?? 'Sem categoria',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: percent / 100,
+                                minHeight: 8,
+                                backgroundColor: Colors.grey.shade200,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(color),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text('${percent.toStringAsFixed(1)}%',
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),
     );
   }
 
-  void _mostrarOpcoesAdicionar() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.arrow_upward, color: Colors.green),
-                title: const Text('Adicionar Receita'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Tela de adicionar receita em desenvolvimento...'),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.arrow_downward, color: Colors.red),
-                title: const Text('Adicionar Despesa'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Tela de adicionar despesa em desenvolvimento...'),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  IconData _iconForCategory(String nome) {
+    final lower = nome.toLowerCase();
+    if (lower.contains('aliment')) return Icons.restaurant;
+    if (lower.contains('transp')) return Icons.directions_bus;
+    if (lower.contains('saude')) return Icons.favorite;
+    if (lower.contains('edu')) return Icons.school;
+    if (lower.contains('lazer')) return Icons.beach_access;
+    if (lower.contains('morad')) return Icons.home;
+    if (lower.contains('invest')) return Icons.trending_up;
+    if (lower.contains('cart')) return Icons.credit_card;
+    return Icons.category;
   }
 }

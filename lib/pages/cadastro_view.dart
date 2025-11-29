@@ -50,7 +50,6 @@ class _CadastroViewState extends State<CadastroView> {
     setState(() => _isLoading = false);
 
     if (sucesso) {
-      await _inicializarViewModels();
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,13 +69,6 @@ class _CadastroViewState extends State<CadastroView> {
           backgroundColor: Colors.redAccent,
         ),
       );
-    }
-  }
-
-  Future<void> _inicializarViewModels() async {
-    final usuarioVM = Provider.of<UsuarioViewModel>(context, listen: false);
-    if (usuarioVM.usuarioAtual != null) {
-      // Inicialização posterior na HomeView
     }
   }
 

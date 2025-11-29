@@ -6,13 +6,13 @@ class UsuarioDao {
 
   Future<int> create(Usuario usuario) async {
     final db = await dbHelper.database;
-    return await db.insert('usuarios', usuario.toMap());
+    return await db.insert('Usuario', usuario.toMap());
   }
 
   Future<Usuario?> read(int id) async {
     final db = await dbHelper.database;
     final maps = await db.query(
-      'usuarios',
+      'Usuario',
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -26,7 +26,7 @@ class UsuarioDao {
   Future<Usuario?> findByEmail(String email) async {
     final db = await dbHelper.database;
     final maps = await db.query(
-      'usuarios',
+      'Usuario',
       where: 'email = ?',
       whereArgs: [email],
     );
@@ -39,14 +39,14 @@ class UsuarioDao {
 
   Future<List<Usuario>> readAll() async {
     final db = await dbHelper.database;
-    final result = await db.query('usuarios');
+    final result = await db.query('Usuario');
     return result.map((map) => Usuario.fromMap(map)).toList();
   }
 
   Future<int> update(Usuario usuario) async {
     final db = await dbHelper.database;
     return await db.update(
-      'usuarios',
+      'Usuario',
       usuario.toMap(),
       where: 'id = ?',
       whereArgs: [usuario.id],
@@ -56,7 +56,7 @@ class UsuarioDao {
   Future<int> delete(int id) async {
     final db = await dbHelper.database;
     return await db.delete(
-      'usuarios',
+      'Usuario',
       where: 'id = ?',
       whereArgs: [id],
     );

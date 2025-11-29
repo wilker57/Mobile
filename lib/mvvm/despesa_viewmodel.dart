@@ -7,7 +7,7 @@ class DespesaViewModel extends ChangeNotifier {
   List<Despesa> _despesas = [];
   int? _usuarioIdAtual;
 
-  List<Despesa> get despesas => _despesas;
+  List<Despesa> get despesas => List.unmodifiable(_despesas);
 
   void setUsuario(int usuarioId) {
     _usuarioIdAtual = usuarioId;
@@ -26,7 +26,7 @@ class DespesaViewModel extends ChangeNotifier {
     await carregarDespesas();
   }
 
-  Future<void> removerDespesa(int id) async {
+  Future<void> deleteDespesa(int id) async {
     await _despesaDao.delete(id);
     await carregarDespesas();
   }

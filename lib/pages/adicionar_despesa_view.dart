@@ -41,12 +41,24 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
   }
 
   Future<void> _loadCategorias() async {
-    final categoriaVM = Provider.of<CategoriaViewModel>(context, listen: false);
-    final categorias = await categoriaVM.getCategoriasPorTipo('DESPESA');
+    final categoriaVM = context.read<CategoriaViewModel>();
+    // Garantir que as categorias estejam carregadas
+    if (categoriaVM.categorias.isEmpty) {
+      await categoriaVM.carregarCategorias();
+    }
+    final todasCategorias = categoriaVM.categorias;
     setState(() {
-      _categorias = categorias;
-      if (_categorias.isNotEmpty) _categoriaId = _categorias.first.id;
+      _categorias = todasCategorias.where((c) => c.tipo == 'DESPESA').toList();
+      if (widget.despesa == null && _categorias.isNotEmpty) {
+        _categoriaId = _categorias.first.id;
+      }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadCategorias();
   }
 
   @override
@@ -61,10 +73,12 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
 
     final usuarioVM = Provider.of<UsuarioViewModel>(context, listen: false);
     final despesaVM = Provider.of<DespesaViewModel>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
 
     if (usuarioVM.usuarioAtual == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuário não autenticado')),
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Usuario nao autenticado')),
       );
       return;
     }
@@ -80,20 +94,24 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
       atual.valor = valor;
       atual.data = _data;
       atual.categoriaId = _categoriaId;
+      atual.pagamentoTipo = _pagamentoTipo;
+      atual.parcelasTotal = _parcelasTotal;
 
       await despesaVM.atualizarDespesa(atual);
 
       setState(() => _isLoading = false);
       if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Despesa atualizada')),
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Despesa atualizada com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
       );
       return;
     }
 
-    if (_pagamentoTipo == 'PARCELADO' && widget.despesa == null) {
-      // Create N parcel entries
+    if (_pagamentoTipo == 'PARCELADO') {
       final parcelaValor =
           double.parse((valor / _parcelasTotal).toStringAsFixed(2));
       DateTime parcelaData = _data;
@@ -129,22 +147,13 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     }
 
     setState(() => _isLoading = false);
-
     if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Despesa adicionada')),
-    );
-  }
-
-  Future<void> _delete() async {
-    if (widget.despesa == null) return;
-    final despesaVM = Provider.of<DespesaViewModel>(context, listen: false);
-    await despesaVM.removerDespesa(widget.despesa!.id!);
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Despesa removida')),
+    navigator.pop();
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Despesa adicionada com sucesso!'),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -167,39 +176,58 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
         actions: [
           if (widget.despesa != null)
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () async {
+                final despesaVM = context.read<DespesaViewModel>();
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+
                 final ok = await showDialog<bool>(
                   context: context,
-                  builder: (c) => AlertDialog(
-                    title: const Text('Confirmar exclusão'),
-                    content: const Text('Deseja remover esta despesa?'),
+                  builder: (context) => AlertDialog(
+                    title: const Text('Confirmar Exclusao'),
+                    content: Text(
+                        'Deseja realmente excluir a despesa "${widget.despesa!.descricao}"?'),
                     actions: [
                       TextButton(
-                          onPressed: () => Navigator.pop(c, false),
-                          child: const Text('Cancelar')),
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancelar'),
+                      ),
                       TextButton(
-                          onPressed: () => Navigator.pop(c, true),
-                          child: const Text('Remover')),
+                        style:
+                            TextButton.styleFrom(foregroundColor: Colors.red),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Excluir'),
+                      ),
                     ],
                   ),
                 );
-                if (ok == true) await _delete();
+                if (ok == true) {
+                  await despesaVM.deleteDespesa(widget.despesa!.id!);
+                  if (!mounted) return;
+                  navigator.pop();
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Despesa excluida com sucesso!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
               },
             ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: [
               TextFormField(
                 controller: _descricaoController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
+                decoration: const InputDecoration(labelText: 'Descricao'),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Informe a descrição' : null,
+                    (v == null || v.isEmpty) ? 'Informe a descricao' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -211,7 +239,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Informe o valor';
                   final parsed = double.tryParse(v.replaceAll(',', '.'));
-                  if (parsed == null) return 'Valor inválido';
+                  if (parsed == null) return 'Valor invalido';
                   return null;
                 },
               ),
@@ -226,7 +254,10 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int?>(
-                value: _categoriaId,
+                key: ValueKey(_categoriaId),
+                initialValue: _categorias.any((c) => c.id == _categoriaId)
+                    ? _categoriaId
+                    : null,
                 items: _categorias.map((c) {
                   return DropdownMenuItem<int?>(
                     value: c.id,
@@ -238,9 +269,10 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _pagamentoTipo,
+                key: ValueKey(_pagamentoTipo),
+                initialValue: _pagamentoTipo,
                 items: const [
-                  DropdownMenuItem(value: 'AVISTA', child: Text('À vista')),
+                  DropdownMenuItem(value: 'AVISTA', child: Text('A vista')),
                   DropdownMenuItem(
                       value: 'PARCELADO', child: Text('Parcelado')),
                 ],
@@ -254,7 +286,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
                 TextFormField(
                   initialValue: _parcelasTotal.toString(),
                   decoration:
-                      const InputDecoration(labelText: 'Número de parcelas'),
+                      const InputDecoration(labelText: 'Numero de parcelas'),
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: false),
                   onChanged: (v) =>
@@ -263,14 +295,33 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
                 const SizedBox(height: 12),
               ],
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Salvar'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _isLoading ? null : () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _isLoading ? null : _submit,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Salvar'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

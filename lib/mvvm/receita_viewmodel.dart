@@ -7,7 +7,7 @@ class ReceitaViewModel extends ChangeNotifier {
   List<Receita> _receitas = [];
   int? _usuarioIdAtual;
 
-  List<Receita> get receitas => _receitas;
+  List<Receita> get receitas => List.unmodifiable(_receitas);
 
   void setUsuario(int usuarioId) {
     _usuarioIdAtual = usuarioId;
@@ -26,7 +26,7 @@ class ReceitaViewModel extends ChangeNotifier {
     await carregarReceitas();
   }
 
-  Future<void> removerReceita(int id) async {
+  Future<void> deleteReceita(int id) async {
     await _receitaDao.delete(id);
     await carregarReceitas();
   }

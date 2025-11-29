@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../mvvm/usuario_viewmodel.dart';
-import '../mvvm/receita_viewmodel.dart';
-import '../mvvm/despesa_viewmodel.dart';
-import '../mvvm/categoria_viewmodel.dart';
 import 'cadastro_view.dart';
 import 'home_view.dart';
 
@@ -44,9 +41,6 @@ class _LoginViewState extends State<LoginView> {
     setState(() => _isLoading = false);
 
     if (sucesso) {
-      await _inicializarViewModels();
-      if (!mounted) return;
-
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeView()),
       );
@@ -64,26 +58,6 @@ class _LoginViewState extends State<LoginView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
-  }
-
-  Future<void> _inicializarViewModels() async {
-    final usuarioVM = Provider.of<UsuarioViewModel>(context, listen: false);
-    if (usuarioVM.usuarioAtual != null) {
-      final id = usuarioVM.usuarioAtual!.id!;
-      final receitaVM = Provider.of<ReceitaViewModel>(context, listen: false);
-      final despesaVM = Provider.of<DespesaViewModel>(context, listen: false);
-      final categoriaVM =
-          Provider.of<CategoriaViewModel>(context, listen: false);
-
-      receitaVM.setUsuario(id);
-      despesaVM.setUsuario(id);
-
-      await Future.wait([
-        receitaVM.carregarReceitas(),
-        despesaVM.carregarDespesas(),
-        categoriaVM.carregarCategorias(),
-      ]);
-    }
   }
 
   @override
