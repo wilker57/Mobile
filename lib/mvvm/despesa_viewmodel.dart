@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../models/despesa/despesa.dart';
 import '../services/dao/despesa_dao.dart';
 
+//gerenciar estado das despesas
 class DespesaViewModel extends ChangeNotifier {
   final DespesaDao _despesaDao = DespesaDao();
   List<Despesa> _despesas = [];
   int? _usuarioIdAtual;
 
+//Carrega despesas do usuario atual
   List<Despesa> get despesas => List.unmodifiable(_despesas);
 
   void setUsuario(int usuarioId) {
@@ -14,6 +16,7 @@ class DespesaViewModel extends ChangeNotifier {
     carregarDespesas();
   }
 
+//Carregar despesas do banco de dados
   Future<void> carregarDespesas() async {
     if (_usuarioIdAtual != null) {
       _despesas = await _despesaDao.readByUsuario(_usuarioIdAtual!);
@@ -21,21 +24,25 @@ class DespesaViewModel extends ChangeNotifier {
     }
   }
 
+//Adicionar nova despesa
   Future<void> adicionarDespesa(Despesa despesa) async {
     await _despesaDao.create(despesa);
     await carregarDespesas();
   }
 
+//Deletar despesa existente
   Future<void> deleteDespesa(int id) async {
     await _despesaDao.delete(id);
     await carregarDespesas();
   }
 
+//Atualizar despesa existente
   Future<void> atualizarDespesa(Despesa despesa) async {
     await _despesaDao.update(despesa);
     await carregarDespesas();
   }
 
+//Calcular total de despesas e retorna valor
   Future<double> get totalDespesas async {
     if (_usuarioIdAtual != null) {
       return await _despesaDao.getTotalByUsuario(_usuarioIdAtual!);
@@ -43,6 +50,7 @@ class DespesaViewModel extends ChangeNotifier {
     return 0.0;
   }
 
+//Calcular total de despesas entre duas datas
   Future<double> totalDespesasEntre(DateTime from, DateTime to) async {
     if (_usuarioIdAtual != null) {
       return await _despesaDao.getTotalByUsuarioBetween(
@@ -51,6 +59,7 @@ class DespesaViewModel extends ChangeNotifier {
     return 0.0;
   }
 
+//Pegar despesas por dia entre duas datas
   Future<List<Map<String, dynamic>>> despesasPorDia(
       DateTime from, DateTime to) async {
     if (_usuarioIdAtual != null) {

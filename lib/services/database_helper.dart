@@ -1,11 +1,16 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+// Helper para gerenciar a conexão com o banco de dados SQLite
+
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
+// Construtor privado
   DatabaseHelper._init();
+
+// Getter para obter a instância do banco de dados
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -13,12 +18,12 @@ class DatabaseHelper {
     return _database!;
   }
 
+// Inicializa o banco de dados
   Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'despesa_pessoal.db');
 
     // Para forçar a recriação do banco, descomente a linha abaixo uma vez
-
     // await deleteDatabase(path);
 
     return await openDatabase(
@@ -73,6 +78,8 @@ class DatabaseHelper {
           )
         ''');
       },
+
+      // Gerencia atualizações do banco de dados
       onUpgrade: (db, oldVersion, newVersion) async {
         print('Upgrading database from version $oldVersion to $newVersion');
 

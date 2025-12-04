@@ -2,13 +2,19 @@ import 'package:flutter/foundation.dart';
 import '../models/usuario/usuario.dart';
 import '../services/dao/usuario_dao.dart';
 
+//gerenciar estado do usuario
+
 class UsuarioViewModel extends ChangeNotifier {
   final UsuarioDao _usuarioDao = UsuarioDao();
   Usuario? _usuarioAtual;
 
+  //Verifica usuario logado e retorna usuario atual
+
   Usuario? get usuarioAtual => _usuarioAtual;
   bool get isLogado => _usuarioAtual != null;
 
+//Validação por email e senha
+//Retorna true se sucesso, false se falha
   Future<bool> login(String email, String senha) async {
     try {
       print('Tentando login para: $email');
@@ -37,6 +43,8 @@ class UsuarioViewModel extends ChangeNotifier {
     }
   }
 
+//Cadastro de novo usuario
+//Retorna true se sucesso, false se falha (email ja existe)
   Future<bool> cadastrar(Usuario usuario) async {
     try {
       print('Tentando cadastrar usuário: ${usuario.email}');
@@ -62,11 +70,13 @@ class UsuarioViewModel extends ChangeNotifier {
     }
   }
 
+//Encerra sessão do usuario atual
   void logout() {
     _usuarioAtual = null;
     notifyListeners();
   }
 
+//Atualiza dados do usuario atual try/catch para capturar erros
   Future<void> atualizarUsuario(Usuario usuario) async {
     try {
       await _usuarioDao.update(usuario);

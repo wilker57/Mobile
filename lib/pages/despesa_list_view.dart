@@ -5,12 +5,16 @@ import '../models/despesa/despesa.dart';
 import '../mvvm/despesa_viewmodel.dart';
 import 'adicionar_despesa_view.dart';
 
+// Tela para listar despesas do usuário
+
 class DespesaListView extends StatefulWidget {
   const DespesaListView({super.key});
 
   @override
   State<DespesaListView> createState() => _DespesaListViewState();
 }
+
+// Estado da tela de listar despesas
 
 class _DespesaListViewState extends State<DespesaListView> {
   @override
@@ -21,11 +25,13 @@ class _DespesaListViewState extends State<DespesaListView> {
     });
   }
 
+// Constrói a interface da tela de listar despesas
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DespesaViewModel>();
     final fmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
+// Scaffold com AppBar, lista de despesas e botão flutuante para adicionar despesa
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Despesas'),
@@ -90,6 +96,7 @@ class _DespesaListViewState extends State<DespesaListView> {
     );
   }
 
+// Mostra diálogo de confirmação e exclui a despesa se confirmado
   Future<void> _deleteDespesa(Despesa despesa) async {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -115,6 +122,7 @@ class _DespesaListViewState extends State<DespesaListView> {
       ),
     );
 
+// Exclui a despesa e mostra mensagem de sucesso ou erro
     if (confirm == true) {
       try {
         await viewModel.deleteDespesa(despesa.id!);

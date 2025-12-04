@@ -6,7 +6,7 @@ class Receita {
   double valor;
   DateTime data;
   DateTime dataCriacao;
-
+//Construtor da classe Receita
   Receita({
     this.id,
     required this.usuarioId,

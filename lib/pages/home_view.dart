@@ -15,6 +15,7 @@ import 'login_view.dart';
 import 'receita_list_view.dart';
 import 'relatorios_view.dart';
 
+//tela principal apos login
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -26,6 +27,8 @@ class _HomeViewState extends State<HomeView> {
   bool _isLoading = true;
   int _selectedIndex = 0;
 
+//Inicializa o estado da tela
+//Carrega dados iniciais
   @override
   void initState() {
     super.initState();
@@ -34,6 +37,7 @@ class _HomeViewState extends State<HomeView> {
     });
   }
 
+//Carrega dados do usuario atual
   Future<void> _carregarDados() async {
     final usuarioVM = context.read<UsuarioViewModel>();
 
@@ -53,9 +57,11 @@ class _HomeViewState extends State<HomeView> {
       ]);
     }
 
+// Atualiza o estado para indicar que o carregamento terminou
     if (mounted) setState(() => _isLoading = false);
   }
 
+//Faz logout do usuario atual e encerra a sessao
   void _logout() {
     context.read<UsuarioViewModel>().logout();
     Navigator.of(context).pushReplacement(
@@ -63,6 +69,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+//Constrói a interface da tela principal
   @override
   Widget build(BuildContext context) {
     final usuario = context.watch<UsuarioViewModel>().usuarioAtual;
@@ -73,6 +80,7 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
+//Constrói a interface principal com AppBar, Drawer e BottomNavigationBar
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -138,6 +146,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+//Constrói os itens da barra de navegação inferior
   BottomNavigationBarItem _navItem(
       {required IconData icon, required String label, required Color color}) {
     return BottomNavigationBarItem(
@@ -232,6 +241,7 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
+// Conteúdo do dashboard exibido na tela principal
 class _DashboardContent extends StatelessWidget {
   const _DashboardContent();
 
@@ -256,6 +266,7 @@ class _DashboardContent extends StatelessWidget {
   }
 }
 
+// Card que exibe o saldo atual
 class _SaldoCard extends StatelessWidget {
   final ReceitaViewModel receitaVM;
   final DespesaViewModel despesaVM;
@@ -267,6 +278,7 @@ class _SaldoCard extends StatelessWidget {
     required this.saldoVM,
   });
 
+//Constrói a interface do card de saldo atual
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -318,6 +330,7 @@ class _SaldoCard extends StatelessWidget {
   }
 }
 
+// Card que exibe os acessos rápidos
 class _AcessosRapidosCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -399,6 +412,7 @@ class _AcessosRapidosCard extends StatelessWidget {
   }
 }
 
+// Botão rápido usado no card de acessos rápidos
 class _QuickButton extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -411,6 +425,7 @@ class _QuickButton extends StatelessWidget {
       required this.color,
       required this.onTap});
 
+// Botão rápido usado no card de acessos rápidos
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -430,6 +445,7 @@ class _QuickButton extends StatelessWidget {
   }
 }
 
+//classe que exibe gastos por categoria
 class _GastosPorCategoriaCard extends StatelessWidget {
   final DespesaViewModel despesaVM;
   final CategoriaViewModel categoriaVM;
@@ -437,6 +453,7 @@ class _GastosPorCategoriaCard extends StatelessWidget {
   const _GastosPorCategoriaCard(
       {required this.despesaVM, required this.categoriaVM});
 
+//Constrói a interface do card de gastos por categoria
   @override
   Widget build(BuildContext context) {
     final totalDespesas =
@@ -447,6 +464,7 @@ class _GastosPorCategoriaCard extends StatelessWidget {
       somaPorCat[d.categoriaId] = (somaPorCat[d.categoriaId] ?? 0) + d.valor;
     }
 
+//Ordena categorias por valor gasto
     final items = somaPorCat.entries.toList();
     items.sort((a, b) => (b.value).compareTo(a.value));
     final colorList = List<MaterialColor>.from(Colors.primaries);
@@ -522,6 +540,7 @@ class _GastosPorCategoriaCard extends StatelessWidget {
     );
   }
 
+//Retorna o icone apropriado para a categoria
   IconData _iconForCategory(String nome) {
     final lower = nome.toLowerCase();
     if (lower.contains('aliment')) return Icons.restaurant;

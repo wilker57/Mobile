@@ -9,7 +9,7 @@ class Despesa {
   String pagamentoTipo;
   int parcelasTotal;
   int? parcelaNumero;
-
+//Construtor da classe Despesa
   Despesa({
     this.id,
     required this.usuarioId,
@@ -22,7 +22,7 @@ class Despesa {
     this.parcelasTotal = 1,
     this.parcelaNumero = 1,
   }) : dataCriacao = dataCriacao ?? DateTime.now();
-
+//Convertendo objeto Despesa para Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -38,6 +38,7 @@ class Despesa {
     };
   }
 
+//Convertendo Map para objeto Despesa
   factory Despesa.fromMap(Map<String, dynamic> map) {
     return Despesa(
       id: map['id'],
@@ -53,6 +54,7 @@ class Despesa {
     );
   }
 
+//apresenta string formatado do objeto Despesa
   @override
   String toString() {
     return 'Despesa{id: $id, descricao: $descricao, valor: $valor, data: $data}';

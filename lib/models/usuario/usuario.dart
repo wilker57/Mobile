@@ -4,7 +4,7 @@ class Usuario {
   String email;
   String senha;
   DateTime dataCriacao;
-
+//Construtor da classe Usuario
   Usuario({
     this.id,
     required this.nome,

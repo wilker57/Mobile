@@ -4,12 +4,16 @@ import '../mvvm/usuario_viewmodel.dart';
 import 'cadastro_view.dart';
 import 'home_view.dart';
 
+//Tela Login
+
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
   State<LoginView> createState() => _LoginViewState();
 }
+
+// Estado da tela de login
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
@@ -18,6 +22,7 @@ class _LoginViewState extends State<LoginView> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
+//Libera os controladores ao descartar a tela
   @override
   void dispose() {
     _emailController.dispose();
@@ -25,11 +30,14 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
+//Realiza o login do usuario
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
+//Chama o ViewModel para realizar o login
+//valida credenciais e retorna sucesso ou falha
     final usuarioVM = Provider.of<UsuarioViewModel>(context, listen: false);
     final sucesso = await usuarioVM.login(
       _emailController.text.trim().toLowerCase(),
@@ -49,6 +57,7 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+//Mostra mensagem de erro em um SnackBar
   void _mostrarErro(String mensagem) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -60,6 +69,7 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
+//Constrói a interface da tela de login
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +79,7 @@ class _LoginViewState extends State<LoginView> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              // 🔹 Logo animado simples e dinâmico
+              // Logo animado simples e dinâmico
               AnimatedContainer(
                 duration: const Duration(seconds: 1),
                 curve: Curves.easeInOut,
@@ -101,7 +111,7 @@ class _LoginViewState extends State<LoginView> {
               ),
               const SizedBox(height: 32),
 
-              // 🔹 Card de login com campos
+              // Card de login com campos
               Card(
                 elevation: 6,
                 shape: RoundedRectangleBorder(
@@ -161,7 +171,7 @@ class _LoginViewState extends State<LoginView> {
                         ),
                         const SizedBox(height: 24),
 
-                        // 🔹 Botão de login
+                        //  Botão de login
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -197,7 +207,7 @@ class _LoginViewState extends State<LoginView> {
               ),
               const SizedBox(height: 16),
 
-              // 🔹 Botão de cadastro simples e claro
+              //  Botão de cadastro simples e claro
               TextButton.icon(
                 icon: const Icon(Icons.person_add_alt_1_rounded,
                     color: Colors.blueAccent),

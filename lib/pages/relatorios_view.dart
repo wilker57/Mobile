@@ -7,6 +7,8 @@ import '../mvvm/despesa_viewmodel.dart';
 import '../mvvm/receita_viewmodel.dart';
 import '../mvvm/usuario_viewmodel.dart';
 
+// Tela de relatórios financeiros
+
 class RelatoriosView extends StatefulWidget {
   const RelatoriosView({super.key});
 
@@ -14,6 +16,8 @@ class RelatoriosView extends StatefulWidget {
   State<RelatoriosView> createState() => _RelatoriosViewState();
 }
 
+// Estado da tela de relatórios financeiros
+//data atual
 class _RelatoriosViewState extends State<RelatoriosView> {
   DateTime _mes = DateTime(DateTime.now().year, DateTime.now().month, 1);
   bool _isLoading = false;
@@ -24,12 +28,14 @@ class _RelatoriosViewState extends State<RelatoriosView> {
   DateTime get _from => DateTime(_mes.year, _mes.month, 1);
   DateTime get _to => DateTime(_mes.year, _mes.month + 1, 0);
 
+//Inicializa o estado da tela
   @override
   void initState() {
     super.initState();
     _carregar();
   }
 
+//Carrega os dados do relatório
   Future<void> _carregar() async {
     setState(() => _isLoading = true);
     final usuarioVM = context.read<UsuarioViewModel>();
@@ -55,6 +61,7 @@ class _RelatoriosViewState extends State<RelatoriosView> {
     if (mounted) setState(() => _isLoading = false);
   }
 
+//Muda o mês exibido no relatório
   void _mudarMes(int delta) {
     setState(() {
       _mes = DateTime(_mes.year, _mes.month + delta, 1);
@@ -62,6 +69,7 @@ class _RelatoriosViewState extends State<RelatoriosView> {
     _carregar();
   }
 
+//Constrói a interface da tela de relatórios financeiros
   @override
   Widget build(BuildContext context) {
     final mesLabel = DateFormat('MMM yyyy', 'pt_BR').format(_mes);
@@ -80,6 +88,8 @@ class _RelatoriosViewState extends State<RelatoriosView> {
                     mesLabel: mesLabel,
                     totalReceitas: _totalReceitas,
                     totalDespesas: _totalDespesas,
+
+                    //Muda o mês exibido no relatório
                     onPrev: () => _mudarMes(-1),
                     onNext: () => _mudarMes(1),
                   ),
@@ -97,6 +107,7 @@ class _RelatoriosViewState extends State<RelatoriosView> {
   }
 }
 
+// Card que exibe o período do relatório
 class _PeriodoCard extends StatelessWidget {
   final String mesLabel;
   final double totalReceitas;
@@ -104,6 +115,7 @@ class _PeriodoCard extends StatelessWidget {
   final VoidCallback onPrev;
   final VoidCallback onNext;
 
+//Construtor do card de período
   const _PeriodoCard({
     required this.mesLabel,
     required this.totalReceitas,
@@ -112,6 +124,7 @@ class _PeriodoCard extends StatelessWidget {
     required this.onNext,
   });
 
+//Constrói o card de período
   @override
   Widget build(BuildContext context) {
     final fmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -123,6 +136,7 @@ class _PeriodoCard extends StatelessWidget {
         child: Column(
           children: [
             Row(
+              //Detemina o alinhamento dos elementos no eixo principal
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
@@ -163,18 +177,23 @@ class _PeriodoCard extends StatelessWidget {
   }
 }
 
+// Card que exibe o gráfico de pizza
+
 class _PizzaCard extends StatelessWidget {
   final double totalReceitas;
   final double totalDespesas;
 
+//Construtor do card de gráfico de pizza
   const _PizzaCard({required this.totalReceitas, required this.totalDespesas});
 
+//Constrói o card de gráfico de pizza
   @override
   Widget build(BuildContext context) {
     final total = totalReceitas + totalDespesas;
     final receitaPct = total == 0 ? 0 : totalReceitas / total * 100;
     final despesaPct = total == 0 ? 0 : totalDespesas / total * 100;
 
+//Retorna o card de gráfico de pizza
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       elevation: 2,
@@ -220,11 +239,13 @@ class _PizzaCard extends StatelessWidget {
   }
 }
 
+// Pequeno widget que exibe um ponto colorido com um rótulo
 class _LegendDot extends StatelessWidget {
   final Color color;
   final String label;
   const _LegendDot({required this.color, required this.label});
 
+//Constrói o widget do ponto de legenda
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -233,7 +254,9 @@ class _LegendDot extends StatelessWidget {
           width: 12,
           height: 12,
           decoration: BoxDecoration(
-              color: color, borderRadius: BorderRadius.circular(6)),
+              //define o tamanho e a cor do ponto
+              color: color,
+              borderRadius: BorderRadius.circular(6)),
         ),
         const SizedBox(width: 4),
         Text(label),
@@ -242,10 +265,12 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
+// Card que exibe gastos com cartão de crédito
 class _CartaoCard extends StatelessWidget {
   final double totalCartao;
   const _CartaoCard({required this.totalCartao});
 
+//Constrói o card de gastos com cartão de crédito
   @override
   Widget build(BuildContext context) {
     final fmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');

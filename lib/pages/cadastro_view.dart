@@ -4,6 +4,7 @@ import '../mvvm/usuario_viewmodel.dart';
 import '../models/usuario/usuario.dart';
 import 'home_view.dart';
 
+// Tela de cadastro de novo usuário
 class CadastroView extends StatefulWidget {
   const CadastroView({super.key});
 
@@ -11,6 +12,7 @@ class CadastroView extends StatefulWidget {
   State<CadastroView> createState() => _CadastroViewState();
 }
 
+// Estado da tela de cadastro
 class _CadastroViewState extends State<CadastroView> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
@@ -22,6 +24,7 @@ class _CadastroViewState extends State<CadastroView> {
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
+//Libera os controladores ao descartar a tela
   @override
   void dispose() {
     _nomeController.dispose();
@@ -34,7 +37,8 @@ class _CadastroViewState extends State<CadastroView> {
   Future<void> _cadastrar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    FocusScope.of(context).unfocus(); // Fecha o teclado
+//Fecha o teclado
+    FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
 
     final usuarioVM = Provider.of<UsuarioViewModel>(context, listen: false);
@@ -45,7 +49,7 @@ class _CadastroViewState extends State<CadastroView> {
     );
 
     final sucesso = await usuarioVM.cadastrar(usuario);
-
+//Verifica se esta montado antes de atualizar o estado
     if (!mounted) return;
     setState(() => _isLoading = false);
 
@@ -72,6 +76,7 @@ class _CadastroViewState extends State<CadastroView> {
     }
   }
 
+//Decorações dos campos de texto
   InputDecoration _inputDecoration(String label, IconData icon,
       {Widget? suffixIcon}) {
     return InputDecoration(
@@ -88,6 +93,7 @@ class _CadastroViewState extends State<CadastroView> {
     );
   }
 
+//Constrói a interface da tela de cadastro
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,6 +246,8 @@ class _CadastroViewState extends State<CadastroView> {
                             ),
                             elevation: 3,
                           ),
+
+                          //Animação de carregamento no botão
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 250),
                             child: _isLoading

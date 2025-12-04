@@ -6,14 +6,18 @@ import '../mvvm/usuario_viewmodel.dart';
 import '../models/receita/receita.dart';
 import '../models/categoria/categoria.dart';
 
+// Tela para adicionar ou editar uma receita
+
 class AdicionarReceitaView extends StatefulWidget {
   final Receita? receita;
   const AdicionarReceitaView({super.key, this.receita});
 
+//Cria o estado da tela
   @override
   State<AdicionarReceitaView> createState() => _AdicionarReceitaViewState();
 }
 
+// Estado da tela de adicionar ou editar receita
 class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
   final _formKey = GlobalKey<FormState>();
   final _descricaoController = TextEditingController();
@@ -23,6 +27,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
   List<Categoria> _categorias = [];
   bool _isLoading = false;
 
+//Inicializa o estado da tela
   @override
   void initState() {
     super.initState();
@@ -36,6 +41,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     }
   }
 
+  //Carrega categorias do ViewModel
   Future<void> _loadCategorias() async {
     final categoriaVM = context.read<CategoriaViewModel>();
     // Garantir que as categorias estejam carregadas
@@ -51,12 +57,14 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     });
   }
 
+  //Atualiza dependencias quando mudam
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadCategorias();
   }
 
+//Descarta controladores ao finalizar
   @override
   void dispose() {
     _descricaoController.dispose();
@@ -64,6 +72,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     super.dispose();
   }
 
+  //Submit do formulário e validação
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -79,6 +88,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
       return;
     }
 
+    //atualiza estado para mostrar carregamento
     setState(() => _isLoading = true);
 
     final valorStr = _valorController.text.replaceAll(',', '.');
@@ -105,6 +115,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
       return;
     }
 
+//Cria nova receita
     final receita = Receita(
       usuarioId: usuarioVM.usuarioAtual!.id!,
       categoriaId: _categoriaId,
@@ -126,6 +137,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     );
   }
 
+  ///Abre um seletor de data e atualiza a data selecionada
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -136,6 +148,7 @@ class _AdicionarReceitaViewState extends State<AdicionarReceitaView> {
     if (picked != null) setState(() => _data = picked);
   }
 
+//Constrói a interface da tela de adicionar ou editar receita
   @override
   Widget build(BuildContext context) {
     return Scaffold(

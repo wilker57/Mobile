@@ -6,6 +6,7 @@ import '../mvvm/usuario_viewmodel.dart';
 import '../models/despesa/despesa.dart';
 import '../models/categoria/categoria.dart';
 
+//Tela para adicionar despesa
 class AdicionarDespesaView extends StatefulWidget {
   final Despesa? despesa;
   const AdicionarDespesaView({super.key, this.despesa});
@@ -13,6 +14,8 @@ class AdicionarDespesaView extends StatefulWidget {
   @override
   State<AdicionarDespesaView> createState() => _AdicionarDespesaViewState();
 }
+
+//Estado da tela de adicionar despesa
 
 class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
   final _formKey = GlobalKey<FormState>();
@@ -24,6 +27,8 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
   bool _isLoading = false;
   String _pagamentoTipo = 'AVISTA';
   int _parcelasTotal = 1;
+
+  //Inicializa o estado da tela
 
   @override
   void initState() {
@@ -40,8 +45,11 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     }
   }
 
+  //Carrega categorias do banco de dados
+
   Future<void> _loadCategorias() async {
     final categoriaVM = context.read<CategoriaViewModel>();
+
     // Garantir que as categorias estejam carregadas
     if (categoriaVM.categorias.isEmpty) {
       await categoriaVM.carregarCategorias();
@@ -55,12 +63,14 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     });
   }
 
+  //Atualiza dependencias quando mudam
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadCategorias();
   }
 
+//descarta os controladores quando a tela é destruída
   @override
   void dispose() {
     _descricaoController.dispose();
@@ -68,6 +78,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     super.dispose();
   }
 
+//Submit do formulário para adicionar ou atualizar despesa
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -88,6 +99,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     final valorStr = _valorController.text.replaceAll(',', '.');
     final valor = double.tryParse(valorStr) ?? 0.0;
 
+//se diferente de nulo, atualiza a despesa existente
     if (widget.despesa != null) {
       final atual = widget.despesa!;
       atual.descricao = _descricaoController.text.trim();
@@ -111,6 +123,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
       return;
     }
 
+//Se tipo de pagamento for parcelado, cria multiplas despesas
     if (_pagamentoTipo == 'PARCELADO') {
       final parcelaValor =
           double.parse((valor / _parcelasTotal).toStringAsFixed(2));
@@ -146,6 +159,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
       await despesaVM.adicionarDespesa(despesa);
     }
 
+//Finaliza o submit e mostra mensagem de sucesso
     setState(() => _isLoading = false);
     if (!mounted) return;
     navigator.pop();
@@ -157,6 +171,9 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     );
   }
 
+  //Primeiro data picker para selecionar a data da despesa
+  //Abre um seletor de data e atualiza a data selecionada
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -167,6 +184,7 @@ class _AdicionarDespesaViewState extends State<AdicionarDespesaView> {
     if (picked != null) setState(() => _data = picked);
   }
 
+//Constrói a interface da tela de adicionar despesa
   @override
   Widget build(BuildContext context) {
     return Scaffold(

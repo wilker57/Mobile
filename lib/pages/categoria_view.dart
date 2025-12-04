@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../models/categoria/categoria.dart';
 import '../mvvm/categoria_viewmodel.dart';
 
+// Tela para gerenciar categorias de despesas e receitas
+
 class CategoriaView extends StatefulWidget {
   const CategoriaView({super.key});
 
@@ -11,6 +13,7 @@ class CategoriaView extends StatefulWidget {
   State<CategoriaView> createState() => _CategoriaViewState();
 }
 
+// Estado da tela de gerenciar categorias
 class _CategoriaViewState extends State<CategoriaView> {
   @override
   void initState() {
@@ -20,6 +23,7 @@ class _CategoriaViewState extends State<CategoriaView> {
     });
   }
 
+//Mostra dialogo para adicionar ou editar categoria
   Future<void> _showAddEditDialog({Categoria? categoria}) async {
     final nomeController = TextEditingController(text: categoria?.nome);
     final formKey = GlobalKey<FormState>();
@@ -126,6 +130,7 @@ class _CategoriaViewState extends State<CategoriaView> {
     );
   }
 
+//Retorna o icone apropriado para a categoria com base no nome
   IconData _iconForCategory(String nome) {
     final lower = nome.toLowerCase();
     if (lower.contains('aliment')) return Icons.restaurant;
@@ -139,6 +144,7 @@ class _CategoriaViewState extends State<CategoriaView> {
     return Icons.category;
   }
 
+//Constrói a interface da tela de gerenciar categorias
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CategoriaViewModel>();

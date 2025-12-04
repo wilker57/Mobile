@@ -5,6 +5,7 @@ import '../models/receita/receita.dart';
 import '../mvvm/receita_viewmodel.dart';
 import 'adicionar_receita_view.dart';
 
+// Tela de listagem de receitas
 class ReceitaListView extends StatefulWidget {
   const ReceitaListView({super.key});
 
@@ -12,6 +13,7 @@ class ReceitaListView extends StatefulWidget {
   State<ReceitaListView> createState() => _ReceitaListViewState();
 }
 
+// Estado da tela de listagem de receitas
 class _ReceitaListViewState extends State<ReceitaListView> {
   @override
   void initState() {
@@ -21,11 +23,13 @@ class _ReceitaListViewState extends State<ReceitaListView> {
     });
   }
 
+//Constrói a tela
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ReceitaViewModel>();
     final fmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
+//Constrói a interface da tela
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Receitas'),
@@ -90,6 +94,7 @@ class _ReceitaListViewState extends State<ReceitaListView> {
     );
   }
 
+// Função para deletar uma receita com confirmação do usuário
   Future<void> _deleteReceita(Receita receita) async {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
